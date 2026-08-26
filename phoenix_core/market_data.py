@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 import requests
 import pandas as pd
 
@@ -10,6 +10,7 @@ class PublicMarketData:
 
     def __init__(self, timeout: int = 15) -> None:
         self.timeout = timeout
+        self.last_provider = None
 
     @staticmethod
     def _frame(rows: List[List[Any]]) -> pd.DataFrame:
@@ -21,6 +22,17 @@ class PublicMarketData:
         for col in columns[1:]:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         return df[["timestamp", "open", "high", "low", "close", "volume"]]
+
+    @staticmethod
+    def _coinbase_product(symbol: str) -> str:
+        s = symbol.upper()
+        if s.endswith("USDT"):
+            base = s[:-4]
+        elif s.endswith("USD"):
+            base = s[:-3]
+        else:
+            raise ValueError(f"Coinbase fallback requires a USD/USDT symbol: {symbol}")
+        return f"{base}-USD"
 
     def _binance(self, symbol: str, interval: str, limit: int) -> pd.DataFrame:
         response = requests.get(
@@ -35,10 +47,8 @@ class PublicMarketData:
         mapping = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600, "2h": 7200, "6h": 21600, "1d": 86400}
         if interval not in mapping:
             raise ValueError(f"Unsupported interval for Coinbase fallback: {interval}")
-        product = symbol.upper().replace("USDT", "-USD").replace("USD", "-USD")
-        product = product.replace("--", "-")
         response = requests.get(
-            f"https://api.exchange.coinbase.com/products/{product}/candles",
+            f"https://api.exchange.coinbase.com/products/{self._coinbase_product(symbol)}/candles",
             params={"granularity": mapping[interval]},
             timeout=self.timeout,
         )
@@ -49,9 +59,13 @@ class PublicMarketData:
 
     def klines(self, symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 300) -> pd.DataFrame:
         try:
-            return self._binance(symbol, interval, limit)
+            df = self._binance(symbol, interval, limit)
+            self.last_provider = "binance"
+            return df
         except requests.RequestException:
-            return self._coinbase(symbol, interval, limit)
+            df = self._coinbase(symbol, interval, limit)
+            self.last_provider = "coinbase"
+            return df
 
 
 BinancePublicMarketData = PublicMarketData
