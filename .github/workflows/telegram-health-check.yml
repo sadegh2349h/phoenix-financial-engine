@@ -8,42 +8,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Runner test
-        run: |
-          echo "PHOENIX Runner is working"
-          echo "Telegram health check started"
-
       - name: Check Telegram Bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
+          set -e
+
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "ERROR: TELEGRAM_BOT_TOKEN is missing"
+            echo "RESULT: TOKEN_MISSING"
             exit 1
           fi
 
           RESPONSE=$(curl -sS --max-time 15 \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe")
 
-          echo "$RESPONSE" | grep -q '"ok":true' || {
-            echo "ERROR: Telegram Bot authentication failed"
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "RESULT: BOT_AUTH_SUCCESS"
+          else
+            echo "RESULT: BOT_AUTH_FAILED"
+            echo "Telegram API response:"
+            echo "$RESPONSE" | sed -E 's/[0-9]{8,}:[A-Za-z0-9_-]+/[TOKEN_REDACTED]/g'
             exit 1
-          }
-
-          echo "Telegram Bot: OK"
+          fi
 
       - name: Send Telegram Test
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          set -e
+
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "ERROR: TELEGRAM_BOT_TOKEN is missing"
+            echo "RESULT: TOKEN_MISSING"
             exit 1
           fi
 
           if [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "ERROR: TELEGRAM_CHAT_ID is missing"
+            echo "RESULT: CHAT_ID_MISSING"
             exit 1
           fi
 
@@ -53,9 +54,11 @@ jobs:
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "text=🔥 PHOENIX — تست اتصال تلگرام با موفقیت انجام شد.")
 
-          echo "$RESPONSE" | grep -q '"ok":true' || {
-            echo "ERROR: Telegram message delivery failed"
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "RESULT: TELEGRAM_MESSAGE_SUCCESS"
+          else
+            echo "RESULT: TELEGRAM_MESSAGE_FAILED"
+            echo "Telegram API response:"
+            echo "$RESPONSE" | sed -E 's/[0-9]{8,}:[A-Za-z0-9_-]+/[TOKEN_REDACTED]/g'
             exit 1
-          }
-
-          echo "Telegram message: SENT SUCCESSFULLY"
+          fi 
