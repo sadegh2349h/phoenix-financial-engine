@@ -1,38 +1,38 @@
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Callable
 
-from .agents import AgentManifest
-
-
-def _brief(*, task: str = "", context: dict[str, Any] | None = None, **_: Any) -> dict[str, Any]:
-    return {
-        "status": "ready",
-        "task": task,
-        "context": context or {},
-        "requires_external_model": True,
-        "autonomous_action": False,
-    }
+from .agent_orchestration import AgentResult, AgentTeam
 
 
-def _financial(*, task: str = "", context: dict[str, Any] | None = None, **_: Any) -> dict[str, Any]:
-    result = _brief(task=task, context=context)
-    result["governance"] = "analysis_only; execution requires explicit human approval"
-    return result
+@dataclass(frozen=True)
+class SpecialistProfile:
+    name: str
+    domain: str
+    priority: int = 100
 
 
-SPECIALIST_AGENTS = [
-    (AgentManifest("marketing", "1.0.0", ("market_analysis", "campaign_strategy", "customer_acquisition"), "medium", "Marketing strategy and growth analysis."), _brief),
-    (AgentManifest("brand_storyteller", "1.0.0", ("brand_positioning", "messaging", "storytelling"), "low", "Brand narrative, positioning and message architecture."), _brief),
-    (AgentManifest("financial_analyst", "1.0.0", ("market_analysis", "financial_research", "risk_analysis", "backtesting"), "high", "Financial research, signals and risk analysis; never autonomous trading.", True), _financial),
-    (AgentManifest("sports_coach", "1.0.0", ("training_plans", "performance_analysis", "goal_tracking"), "medium", "Sports training and performance planning."), _brief),
-    (AgentManifest("mindfulness_guide", "1.0.0", ("meditation", "mindfulness", "habit_support"), "low", "Meditation and mindfulness guidance."), _brief),
-    (AgentManifest("future_researcher", "1.0.0", ("trend_analysis", "scenario_planning", "foresight"), "medium", "Future trends, scenarios and opportunity research."), _brief),
-    (AgentManifest("strategy_council", "1.0.0", ("strategic_analysis", "decision_support", "prioritization"), "high", "Cross-domain strategy synthesis and decision support.", True), _brief),
-    (AgentManifest("systemization_specialist", "1.0.0", ("process_design", "automation", "operating_systems"), "medium", "Process architecture, standardization and automation."), _brief),
-    (AgentManifest("growth_specialist", "1.0.0", ("growth_strategy", "funnel_design", "retention"), "medium", "Growth systems, customer journeys and retention."), _brief),
-]
+class SpecialistAgentTeam(AgentTeam):
+    """Extensible registry for PHOENIX domain specialists."""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._profiles: dict[str, SpecialistProfile] = {}
 
-def default_agent_names() -> tuple[str, ...]:
-    return tuple(manifest.name for manifest, _ in SPECIALIST_AGENTS)
+    def register_specialist(self, profile: SpecialistProfile, handler: Callable[[dict[str, Any]], dict[str, Any]]) -> None:
+        self.register(profile.name, handler)
+        self._profiles[profile.name] = profile
+
+    def run_by_domain(self, task: dict[str, Any], domains: set[str] | None = None) -> list[AgentResult]:
+        selected: list[AgentResult] = []
+        for name, handler in self._agents.items():
+            profile = self._profiles[name]
+            if domains and profile.domain not in domains:
+                continue
+            try:
+                output = handler(dict(task))
+                selected.append(AgentResult(name, "completed", output, float(output.get("confidence", 0.0))))
+            except Exception as exc:
+                selected.append(AgentResult(name, "failed", {"error": type(exc).__name__}, 0.0))
+        return sorted(selected, key=lambda result: self._profiles[result.agent].priority)
