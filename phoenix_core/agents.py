@@ -22,6 +22,9 @@ class AgentRegistry:
     def get(self, name: str) -> tuple[AgentManifest, Callable[..., Any]]:
         return self._agents[name]
 
+    def find_by_capability(self, capability: str) -> list[AgentManifest]:
+        return [m for m, _ in self._agents.values() if capability in m.capabilities]
+
     def list(self) -> list[AgentManifest]:
         return [manifest for manifest, _ in self._agents.values()]
 
