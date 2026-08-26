@@ -8,44 +8,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Runner test
+        run: |
+          echo "PHOENIX Runner is working"
+          echo "Telegram health check started"
+
       - name: Check Telegram Bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
-          set -e
-
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "ERROR: TELEGRAM_BOT_TOKEN is not configured."
+            echo "ERROR: TELEGRAM_BOT_TOKEN is missing"
             exit 1
           fi
 
-          RESPONSE=$(curl -sS \
-            --max-time 15 \
+          RESPONSE=$(curl -sS --max-time 15 \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe")
 
-          echo "$RESPONSE" | grep -q '"ok":true'
+          echo "$RESPONSE" | grep -q '"ok":true' || {
+            echo "ERROR: Telegram Bot authentication failed"
+            exit 1
+          }
 
-          echo "Telegram Bot connection: SUCCESS"
+          echo "Telegram Bot: OK"
 
-      - name: Send Test Message
+      - name: Send Telegram Test
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          set -e
-
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "ERROR: Telegram secrets are not configured."
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "ERROR: TELEGRAM_BOT_TOKEN is missing"
             exit 1
           fi
 
-          RESPONSE=$(curl -sS \
-            --max-time 15 \
+          if [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "ERROR: TELEGRAM_CHAT_ID is missing"
+            exit 1
+          fi
+
+          RESPONSE=$(curl -sS --max-time 15 \
             -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=🔥 PHOENIX Telegram Health Check — اتصال تلگرام با موفقیت تأیید شد.")
+            --data-urlencode "text=🔥 PHOENIX — تست اتصال تلگرام با موفقیت انجام شد.")
 
-          echo "$RESPONSE" | grep -q '"ok":true'
+          echo "$RESPONSE" | grep -q '"ok":true' || {
+            echo "ERROR: Telegram message delivery failed"
+            exit 1
+          }
 
-          echo "Telegram message delivery: SUCCESS"
+          echo "Telegram message: SENT SUCCESSFULLY"
