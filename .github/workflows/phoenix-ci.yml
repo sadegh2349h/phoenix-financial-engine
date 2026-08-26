@@ -26,3 +26,18 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run tests
         run: python -m pytest -q
+
+  docker-build:
+    name: PHOENIX container build
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Build container
+        run: docker build -t phoenix-financial-engine:${{ github.sha }} .
+      - name: Smoke test container
+        run: |
+          docker run --rm phoenix-financial-engine:${{ github.sha }} python -c "import phoenix_core; print('PHOENIX import: OK')"
