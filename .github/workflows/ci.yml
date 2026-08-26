@@ -7,6 +7,7 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# CI is intentionally triggered on main pushes, PRs, and manual dispatches.
 jobs:
   test:
     runs-on: ubuntu-latest
