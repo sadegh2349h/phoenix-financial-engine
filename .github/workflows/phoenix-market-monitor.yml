@@ -1,0 +1,24 @@
+name: PHOENIX Market Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python monitoring/market_scan.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PHOENIX_SYMBOLS: ${{ vars.PHOENIX_SYMBOLS }}
+          PHOENIX_INTERVALS: ${{ vars.PHOENIX_INTERVALS }}
