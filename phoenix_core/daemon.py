@@ -27,3 +27,7 @@ def run_forever(symbol: str = "BTCUSDT", interval: str = "1h", poll_seconds: int
             if notifier:
                 notifier.send(f"PHOENIX MONITOR ERROR\n{type(exc).__name__}: {exc}")
         time.sleep(max(30, int(poll_seconds)))
+
+
+if __name__ == "__main__":
+    run_forever()
