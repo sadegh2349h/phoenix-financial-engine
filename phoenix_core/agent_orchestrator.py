@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .agents import AgentRegistry, build_default_registry
+from .intelligence import IntelligenceLayer, IntelligenceRequest
 
 
 @dataclass(frozen=True)
@@ -15,14 +16,11 @@ class AgentTask:
 
 
 class AgentOrchestrator:
-    """Governed routing layer for PHOENIX specialist agents.
+    """Governed routing and intelligence layer for PHOENIX specialist agents."""
 
-    This layer deliberately separates routing from model/provider integration.
-    Agents can be backed by an LLM later without changing task governance.
-    """
-
-    def __init__(self, registry: AgentRegistry | None = None) -> None:
+    def __init__(self, registry: AgentRegistry | None = None, intelligence: IntelligenceLayer | None = None) -> None:
         self.registry = registry or build_default_registry()
+        self.intelligence = intelligence or IntelligenceLayer()
 
     def plan(self, task: AgentTask) -> dict[str, Any]:
         candidates = self.registry.find_by_capability(task.capability)
@@ -44,5 +42,7 @@ class AgentOrchestrator:
             return plan
         if plan["human_approval_required"]:
             return {**plan, "status": "approval_required", "executed": False}
-        result = self.registry.run(plan["agent"], task=task.objective, context=task.context)
-        return {**plan, "status": "completed", "executed": True, "result": result}
+        response = self.intelligence.analyze(
+            IntelligenceRequest(task.objective, task.context, plan["agent"])
+        )
+        return {**plan, "status": "completed", "executed": True, "intelligence": response}
