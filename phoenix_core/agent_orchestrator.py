@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .agents import AgentRegistry, build_default_registry
+from .data_access import DataAccessLayer
 from .intelligence import IntelligenceLayer, IntelligenceRequest
 
 
@@ -16,11 +17,14 @@ class AgentTask:
 
 
 class AgentOrchestrator:
-    """Governed routing and intelligence layer for PHOENIX specialist agents."""
+    """Governed routing: data context -> specialist -> intelligence -> review."""
 
-    def __init__(self, registry: AgentRegistry | None = None, intelligence: IntelligenceLayer | None = None) -> None:
+    def __init__(self, registry: AgentRegistry | None = None,
+                 intelligence: IntelligenceLayer | None = None,
+                 data_access: DataAccessLayer | None = None) -> None:
         self.registry = registry or build_default_registry()
         self.intelligence = intelligence or IntelligenceLayer()
+        self.data_access = data_access or DataAccessLayer()
 
     def plan(self, task: AgentTask) -> dict[str, Any]:
         candidates = self.registry.find_by_capability(task.capability)
@@ -28,11 +32,8 @@ class AgentOrchestrator:
             return {"status": "no_agent", "objective": task.objective, "capability": task.capability}
         selected = candidates[0]
         return {
-            "status": "planned",
-            "agent": selected.name,
-            "version": selected.version,
-            "objective": task.objective,
-            "capability": task.capability,
+            "status": "planned", "agent": selected.name, "version": selected.version,
+            "objective": task.objective, "capability": task.capability,
             "human_approval_required": task.requires_approval or selected.human_approval_required,
         }
 
@@ -42,7 +43,7 @@ class AgentOrchestrator:
             return plan
         if plan["human_approval_required"]:
             return {**plan, "status": "approval_required", "executed": False}
-        response = self.intelligence.analyze(
-            IntelligenceRequest(task.objective, task.context, plan["agent"])
-        )
-        return {**plan, "status": "completed", "executed": True, "intelligence": response}
+        data = self.data_access.query(task.objective)
+        request = IntelligenceRequest(task.objective, {**task.context, "data": data}, plan["agent"])
+        response = self.intelligence.analyze(request)
+        return {**plan, "status": "completed", "executed": True, "data": data, "intelligence": response}
