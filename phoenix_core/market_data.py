@@ -5,54 +5,53 @@ import requests
 import pandas as pd
 
 
-class BinancePublicMarketData:
-    """Public Spot market-data adapter; no account/API key is required."""
+class PublicMarketData:
+    """Provider-neutral public market data with Binance -> Coinbase failover."""
 
-    BASE_URL = "https://api.binance.com"
-
-    def __init__(self, timeout: int = 10) -> None:
+    def __init__(self, timeout: int = 15) -> None:
         self.timeout = timeout
 
-    def klines(
-        self,
-        symbol: str = "BTCUSDT",
-        interval: str = "1h",
-        limit: int = 500,
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
-    ) -> pd.DataFrame:
-        params: Dict[str, Any] = {
-            "symbol": symbol.upper(),
-            "interval": interval,
-            "limit": min(max(int(limit), 1), 1000),
-        }
-        if start_time is not None:
-            params["startTime"] = int(start_time)
-        if end_time is not None:
-            params["endTime"] = int(end_time)
-
-        response = requests.get(
-            f"{self.BASE_URL}/api/v3/klines",
-            params=params,
-            timeout=self.timeout,
-        )
-        response.raise_for_status()
-        rows: List[List[Any]] = response.json()
-
-        columns = [
-            "open_time", "open", "high", "low", "close", "volume",
-            "close_time", "quote_volume", "trade_count",
-            "taker_buy_base_volume", "taker_buy_quote_volume", "ignore",
-        ]
+    @staticmethod
+    def _frame(rows: List[List[Any]]) -> pd.DataFrame:
+        columns = ["open_time", "open", "high", "low", "close", "volume"]
         df = pd.DataFrame(rows, columns=columns)
         if df.empty:
             return df
-
         df["timestamp"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
-        for col in ["open", "high", "low", "close", "volume", "quote_volume"]:
+        for col in columns[1:]:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-        df["trade_count"] = pd.to_numeric(df["trade_count"], errors="coerce")
-        return df[[
-            "timestamp", "open", "high", "low", "close", "volume",
-            "quote_volume", "trade_count", "open_time", "close_time"
-        ]]
+        return df[["timestamp", "open", "high", "low", "close", "volume"]]
+
+    def _binance(self, symbol: str, interval: str, limit: int) -> pd.DataFrame:
+        response = requests.get(
+            "https://api.binance.com/api/v3/klines",
+            params={"symbol": symbol.upper(), "interval": interval, "limit": min(max(limit, 1), 1000)},
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        return self._frame(response.json())
+
+    def _coinbase(self, symbol: str, interval: str, limit: int) -> pd.DataFrame:
+        mapping = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600, "2h": 7200, "6h": 21600, "1d": 86400}
+        if interval not in mapping:
+            raise ValueError(f"Unsupported interval for Coinbase fallback: {interval}")
+        product = symbol.upper().replace("USDT", "-USD").replace("USD", "-USD")
+        product = product.replace("--", "-")
+        response = requests.get(
+            f"https://api.exchange.coinbase.com/products/{product}/candles",
+            params={"granularity": mapping[interval]},
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        rows = response.json()[-min(max(limit, 1), 300):]
+        rows = [[int(r[0]) * 1000, r[3], r[2], r[1], r[4], r[5]] for r in rows]
+        return self._frame(rows).sort_values("timestamp").reset_index(drop=True)
+
+    def klines(self, symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 300) -> pd.DataFrame:
+        try:
+            return self._binance(symbol, interval, limit)
+        except requests.RequestException:
+            return self._coinbase(symbol, interval, limit)
+
+
+BinancePublicMarketData = PublicMarketData
