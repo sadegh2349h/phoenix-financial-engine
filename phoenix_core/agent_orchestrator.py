@@ -42,10 +42,10 @@ class AgentOrchestrator:
         plan = self.plan(task)
         if plan["status"] != "planned":
             return plan
-        if plan["human_approval_required"]:
-            return {**plan, "status": "approval_required", "executed": False}
-        data = self.data_access.query(task.objective)
         memory_context = self.memory.context_for(task.objective)
+        if plan["human_approval_required"]:
+            return {**plan, "status": "approval_required", "executed": False, "memory": memory_context}
+        data = self.data_access.query(task.objective)
         request = IntelligenceRequest(task.objective,
                                       {**task.context, "data": data, "memory": memory_context},
                                       plan["agent"])
