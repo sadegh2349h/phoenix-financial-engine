@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Any, Dict
 import pandas as pd
 
 from .data_quality import assess_ohlcv
-from .market_data import BinancePublicMarketData
+from .market_data import PublicMarketData
 
 
 @dataclass(frozen=True)
@@ -23,10 +23,10 @@ class MarketAssessment:
 
 
 class FinancialEngine:
-    """Research engine: data -> quality -> indicators -> structured assessment."""
+    """Research engine: provider -> quality -> indicators -> structured assessment."""
 
-    def __init__(self, provider: BinancePublicMarketData | None = None) -> None:
-        self.provider = provider or BinancePublicMarketData()
+    def __init__(self, provider: PublicMarketData | None = None) -> None:
+        self.provider = provider or PublicMarketData()
 
     def analyze(self, symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 500) -> MarketAssessment:
         df = self.provider.klines(symbol, interval, limit)
@@ -70,5 +70,5 @@ class FinancialEngine:
             trend=trend, momentum=momentum, volatility=volatility,
             volume_ratio=round(volume_ratio, 4), confidence=round(confidence, 2),
             data_quality=quality.score,
-            evidence={"ema20": float(e20), "ema50": float(e50), "rsi14": float(r), "atr14": float(a)},
+            evidence={"ema20": float(e20), "ema50": float(e50), "rsi14": float(r), "atr14": float(a), "provider": self.provider.last_provider},
         )
