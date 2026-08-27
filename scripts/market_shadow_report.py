@@ -10,20 +10,25 @@ if str(ROOT) not in sys.path:
 
 from phoenix_core.market_data import PublicMarketData
 from financial_engine.evaluation import shadow_evaluate
+from financial_engine.performance import score, markdown_report, json_report
 
 
 def main() -> None:
     provider = PublicMarketData(timeout=15)
     frame = provider.klines("BTCUSDT", "1d", 1000)
-    if len(frame) < 365:
-        raise SystemExit(f"insufficient BTC history: {len(frame)} rows")
+    if len(frame) < 415:
+        raise SystemExit(f"insufficient BTC history: {len(frame)} rows; 415 rows required")
 
-    rows = []
+    evaluations = []
+    raw = []
     for window in (30, 365):
         r = shadow_evaluate(frame, asset="BTCUSDT", window_days=window)
-        rows.append({
+        s = score(r.strategy, r.buy_and_hold_return_pct)
+        evaluations.append({"window_days": window, "score": s})
+        raw.append({
             "asset": r.asset,
-            "window_days": r.window_days,
+            "window_days": window,
+            "warmup_rows": r.warmup_rows,
             "signals": r.strategy.trades,
             "successful_signals": r.strategy.wins,
             "failed_signals": r.strategy.losses,
@@ -36,16 +41,18 @@ def main() -> None:
             "final_equity_toman": r.strategy.final_equity,
         })
 
-    payload = {
-        "method": "trade_outcome_accuracy",
-        "note": "Accuracy is winning completed strategy trades divided by completed strategy trades; it is not a guarantee of future performance.",
-        "provider": provider.last_provider,
-        "results": rows,
-    }
+    report = markdown_report("BTCUSDT", evaluations)
+    print(report)
+    (ROOT / "phoenix_performance_report.md").write_text(report + "\n", encoding="utf-8")
+    (ROOT / "phoenix_performance_report.json").write_text(json_report("BTCUSDT", evaluations) + "\n", encoding="utf-8")
     Path("phoenix_market_evaluation.json").write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps({
+            "method": "trade_outcome_accuracy",
+            "note": "Accuracy is historical completed-trade accuracy, not a guarantee of future performance.",
+            "provider": provider.last_provider,
+            "results": raw,
+        }, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
