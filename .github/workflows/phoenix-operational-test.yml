@@ -35,6 +35,12 @@ jobs:
           if [ -f phoenix_performance_report.md ]; then
             cat phoenix_performance_report.md >> "$GITHUB_STEP_SUMMARY"
           fi
+      - name: Send PHOENIX performance report to Telegram
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/send_performance_report.py
       - name: Persist performance reports
         uses: actions/upload-artifact@v4
         with:
