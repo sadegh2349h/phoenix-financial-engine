@@ -7,24 +7,23 @@ from .agent_orchestration import AgentResult, AgentTeam
 from .agents import AgentManifest
 
 
-# Stable public list for compatibility and discovery.
-default_agent_names = [
+_DEFAULT_AGENT_NAMES = [
     "strategy", "marketing", "brand", "financial_analyst", "sports",
     "meditation", "future", "systemization", "research",
 ]
 
 
+def default_agent_names() -> list[str]:
+    return list(_DEFAULT_AGENT_NAMES)
+
+
 def _contract_handler(**kwargs: Any) -> dict[str, Any]:
-    """Safe default handler: returns a specialist contract, no external side effects."""
     return {"status": "ready", "confidence": 0.5, "context_keys": sorted(kwargs)}
 
 
 def _financial_handler(**kwargs: Any) -> dict[str, Any]:
-    """Financial specialist contract; analysis is never an autonomous action."""
     return {
-        "status": "ready",
-        "confidence": 0.5,
-        "autonomous_action": False,
+        "status": "ready", "confidence": 0.5, "autonomous_action": False,
         "governance": "human approval required for financial actions",
         "context_keys": sorted(kwargs),
     }
