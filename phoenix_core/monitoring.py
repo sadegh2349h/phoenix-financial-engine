@@ -13,7 +13,6 @@ class AuditEvent:
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
-# Compatibility name used by the alert bridge.
 MonitorEvent = AuditEvent
 
 
@@ -27,8 +26,10 @@ class Monitor:
     def add_alert(self, handler: Callable[[AuditEvent], Any]) -> None:
         self._alerts.append(handler)
 
-    def record(self, event: str, status: str, **details: Any) -> AuditEvent:
-        item = AuditEvent(event=event, status=status, details=dict(details))
+    def record(self, event: str, status: str, details: dict[str, Any] | None = None, **extra: Any) -> AuditEvent:
+        payload = dict(details or {})
+        payload.update(extra)
+        item = AuditEvent(event=event, status=status, details=payload)
         self._events.append(item)
         if status in {"error", "failed", "critical"}:
             for alert in self._alerts:
@@ -48,5 +49,6 @@ class Monitor:
         critical = sum(1 for e in self._events if e.status == "critical")
         return {
             "status": "critical" if critical else ("degraded" if failed else "healthy"),
-            "events": len(self._events), "failures": failed, "critical": critical,
+            "events": len(self._events),
+            "failures": failed,
         }
