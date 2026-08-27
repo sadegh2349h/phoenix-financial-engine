@@ -9,7 +9,7 @@ from .agents import AgentManifest
 
 # Stable public list for compatibility and discovery.
 default_agent_names = [
-    "strategy", "marketing", "brand", "finance", "sports",
+    "strategy", "marketing", "brand", "financial_analyst", "sports",
     "meditation", "future", "systemization", "research",
 ]
 
@@ -19,13 +19,22 @@ def _contract_handler(**kwargs: Any) -> dict[str, Any]:
     return {"status": "ready", "confidence": 0.5, "context_keys": sorted(kwargs)}
 
 
-# Registry contracts consumed by AgentRegistry.build_default_registry().
-# Concrete AI providers can replace handlers without changing the contract.
+def _financial_handler(**kwargs: Any) -> dict[str, Any]:
+    """Financial specialist contract; analysis is never an autonomous action."""
+    return {
+        "status": "ready",
+        "confidence": 0.5,
+        "autonomous_action": False,
+        "governance": "human approval required for financial actions",
+        "context_keys": sorted(kwargs),
+    }
+
+
 SPECIALIST_AGENTS = [
     (AgentManifest("strategy", "1.0", ("growth_strategy", "strategy", "planning")), _contract_handler),
-    (AgentManifest("marketing", "1.0", ("marketing", "growth", "customer_acquisition")), _contract_handler),
+    (AgentManifest("marketing", "1.0", ("marketing", "growth", "customer_acquisition", "market_analysis")), _contract_handler),
     (AgentManifest("brand", "1.0", ("branding", "brand_strategy")), _contract_handler),
-    (AgentManifest("finance", "1.0", ("finance", "financial_analysis")), _contract_handler),
+    (AgentManifest("financial_analyst", "1.0", ("finance", "financial_analysis", "financial_research", "market_analysis"), risk_level="high", human_approval_required=True), _financial_handler),
     (AgentManifest("sports", "1.0", ("sports", "performance")), _contract_handler),
     (AgentManifest("meditation", "1.0", ("meditation", "mindfulness")), _contract_handler),
     (AgentManifest("future", "1.0", ("future", "foresight")), _contract_handler),
