@@ -7,6 +7,8 @@ from .agents import AgentRegistry, build_default_registry
 from .data_access import DataAccessLayer
 from .intelligence import IntelligenceLayer, IntelligenceRequest
 from .memory import MemoryStore
+from .agent_performance import AgentPerformanceTracker
+from .smart_routing import SmartRouter
 
 
 @dataclass(frozen=True)
@@ -18,7 +20,7 @@ class AgentTask:
 
 
 class AgentOrchestrator:
-    """Governed routing: data -> memory -> specialist -> intelligence -> review."""
+    """Governed routing: data -> memory -> smart specialist selection -> intelligence -> review."""
 
     def __init__(self, registry: AgentRegistry | None = None,
                  intelligence: IntelligenceLayer | None = None,
@@ -28,15 +30,19 @@ class AgentOrchestrator:
         self.intelligence = intelligence or IntelligenceLayer()
         self.data_access = data_access or DataAccessLayer()
         self.memory = memory or MemoryStore()
+        self.performance = AgentPerformanceTracker(self.memory)
+        self.router = SmartRouter(self.registry, self.performance)
 
     def plan(self, task: AgentTask) -> dict[str, Any]:
-        candidates = self.registry.find_by_capability(task.capability)
-        if not candidates:
+        routing = self.router.select(task.capability)
+        if not routing.selected:
             return {"status": "no_agent", "objective": task.objective, "capability": task.capability}
-        selected = candidates[0]
-        return {"status": "planned", "agent": selected.name, "version": selected.version,
-                "objective": task.objective, "capability": task.capability,
-                "human_approval_required": task.requires_approval or selected.human_approval_required}
+        selected = self.registry.get(routing.selected[0])[0]
+        return {"status": "planned", "agent": selected.name, "agents": routing.selected,
+                "version": selected.version, "objective": task.objective,
+                "capability": task.capability,
+                "human_approval_required": task.requires_approval or selected.human_approval_required,
+                "routing_rationale": routing.rationale}
 
     def execute(self, task: AgentTask) -> dict[str, Any]:
         plan = self.plan(task)
