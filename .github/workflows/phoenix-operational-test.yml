@@ -29,12 +29,16 @@ jobs:
         run: python -m pytest -q tests/test_market_evaluation.py
       - name: Live BTC performance evaluation
         run: python scripts/market_shadow_report.py
+      - name: Compare against previous PHOENIX baseline
+        run: python scripts/compare_performance.py
       - name: Publish PHOENIX performance report
         if: always()
         run: |
-          if [ -f phoenix_performance_report.md ]; then
-            cat phoenix_performance_report.md >> "$GITHUB_STEP_SUMMARY"
-          fi
+          for f in phoenix_performance_report.md phoenix_performance_comparison.md; do
+            if [ -f "$f" ]; then
+              cat "$f" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
       - name: Send PHOENIX performance report to Telegram
         if: success()
         env:
@@ -49,6 +53,7 @@ jobs:
             phoenix_market_evaluation.json
             phoenix_performance_report.md
             phoenix_performance_report.json
+            phoenix_performance_comparison.md
           if-no-files-found: error
 
   live-telegram:
