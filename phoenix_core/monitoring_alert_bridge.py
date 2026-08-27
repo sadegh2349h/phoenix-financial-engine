@@ -18,7 +18,7 @@ class MonitoringAlertBridge:
         severity = "critical" if event.status == "critical" else "warning"
         alert = self.alerts.build(
             severity=severity,
-            title=f"PHOENIX: {event.name}",
+            title=f"PHOENIX: {event.event}",
             message=f"System event status: {event.status}",
             metadata={"timestamp": event.timestamp, **event.details},
         )
