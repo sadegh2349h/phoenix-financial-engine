@@ -14,7 +14,7 @@ class LearningContext:
 
 
 class AgentLearningContext:
-    """Builds bounded learning context from prior decisions and evaluations."""
+    """Builds bounded learning context from prior decisions and agent evaluations."""
 
     def __init__(self, memory: MemoryStore, limit: int = 10) -> None:
         self.memory = memory
@@ -26,7 +26,7 @@ class AgentLearningContext:
         memories = self.memory.context_for(objective, self.limit)
         evaluations = [
             item for item in self.memory.all()
-            if item.get("type") == "evaluation"
+            if item.get("type") in {"evaluation", "agent_evaluation"}
         ]
         average = round(
             sum(float(item.get("score", 0.0)) for item in evaluations) / len(evaluations), 4
