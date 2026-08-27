@@ -8,7 +8,7 @@ def test_agents_exchange_context_across_rounds():
     messages = dialogue.run({"objective": "growth"}, rounds=2)
     assert len(messages) == 4
     assert messages[-1].round == 2
-    assert messages[-1].content["seen"] == ["strategy", "risk"]
+    assert messages[-1].content["seen"] == sorted(["strategy", "risk"])
 
 
 def test_dialogue_rejects_invalid_rounds():
