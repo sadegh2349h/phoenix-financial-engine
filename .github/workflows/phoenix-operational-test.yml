@@ -25,6 +25,10 @@ jobs:
         run: python -m pytest -q tests/test_operational_paths.py
       - name: Financial engine failover integration test
         run: python -m pytest -q tests/test_financial_engine.py
+      - name: Market shadow evaluation contract tests
+        run: python -m pytest -q tests/test_market_evaluation.py
+      - name: Live BTC shadow evaluation
+        run: python scripts/market_shadow_test.py
 
   live-telegram:
     if: ${{ github.event_name == 'workflow_dispatch' }}
