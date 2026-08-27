@@ -23,8 +23,16 @@ class LearningAgentTeam:
 
     def run(self, objective: str, task: dict[str, Any]) -> TeamLearningResult:
         context = self.learning.build(objective)
-        enriched = {**task, "objective": objective, "memory": context.memories,
-                    "historical_average_score": context.average_score}
+        enriched = {
+            **task,
+            "objective": objective,
+            "memory": context.memories,
+            "historical_average_score": context.average_score,
+        }
         results = self.team.run_by_domain(enriched)
-        return TeamLearningResult(objective, context.memories,
-                                  [result.__dict__ for result in results])
+        agents = [
+            {"agent": result.agent, "status": result.status, "result": result.output,
+             "confidence": result.confidence}
+            for result in results
+        ]
+        return TeamLearningResult(objective, context.memories, agents)
