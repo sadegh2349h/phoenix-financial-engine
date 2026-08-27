@@ -14,9 +14,13 @@ from financial_engine.performance import score, markdown_report, json_report
 
 def main() -> None:
     provider = PublicMarketData(timeout=15)
-    frame = provider.klines("BTCUSDT", "1d", 1000)
+    requested = 1000
+    frame = provider.klines("BTCUSDT", "1d", requested)
     if len(frame) < 365:
-        raise SystemExit(f"insufficient BTC history: {len(frame)} rows")
+        raise SystemExit(
+            f"insufficient BTC history: {len(frame)} rows (requested {requested}; "
+            "provider returned less than the required 365-day evaluation history)"
+        )
 
     evaluations = []
     for window in (30, 365):
