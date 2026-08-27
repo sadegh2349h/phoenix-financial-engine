@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any, List
 import requests
 import pandas as pd
 
 
 class PublicMarketData:
-    """Provider-neutral public market data with Binance -> Coinbase failover."""
+    """Provider-neutral public market data with paginated Coinbase failover."""
 
     def __init__(self, timeout: int = 15) -> None:
         self.timeout = timeout
@@ -47,15 +48,33 @@ class PublicMarketData:
         mapping = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600, "2h": 7200, "6h": 21600, "1d": 86400}
         if interval not in mapping:
             raise ValueError(f"Unsupported interval for Coinbase fallback: {interval}")
-        response = requests.get(
-            f"https://api.exchange.coinbase.com/products/{self._coinbase_product(symbol)}/candles",
-            params={"granularity": mapping[interval]},
-            timeout=self.timeout,
-        )
-        response.raise_for_status()
-        rows = response.json()[-min(max(limit, 1), 300):]
-        rows = [[int(r[0]) * 1000, r[3], r[2], r[1], r[4], r[5]] for r in rows]
-        return self._frame(rows).sort_values("timestamp").reset_index(drop=True)
+        granularity = mapping[interval]
+        requested = min(max(limit, 1), 1000)
+        frames: list[pd.DataFrame] = []
+        end = datetime.now(timezone.utc)
+        remaining = requested
+        while remaining > 0:
+            count = min(remaining, 300)
+            start = end - timedelta(seconds=granularity * count)
+            response = requests.get(
+                f"https://api.exchange.coinbase.com/products/{self._coinbase_product(symbol)}/candles",
+                params={"granularity": granularity, "start": start.isoformat(), "end": end.isoformat()},
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            raw = response.json()
+            if not raw:
+                break
+            frame = self._frame([[int(r[0]) * 1000, r[3], r[2], r[1], r[4], r[5]] for r in raw])
+            frames.append(frame)
+            oldest = frame["timestamp"].min().to_pydatetime()
+            end = oldest - timedelta(seconds=granularity)
+            remaining -= len(frame)
+            if len(frame) < count:
+                break
+        if not frames:
+            return self._frame([])
+        return pd.concat(frames, ignore_index=True).drop_duplicates("timestamp").sort_values("timestamp").tail(requested).reset_index(drop=True)
 
     def klines(self, symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 300) -> pd.DataFrame:
         try:
