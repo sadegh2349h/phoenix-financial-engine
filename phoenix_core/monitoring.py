@@ -27,6 +27,7 @@ class Monitor:
         self._alerts.append(handler)
 
     def record(self, event: str, status: str, details: dict[str, Any] | None = None, **extra: Any) -> AuditEvent:
+        """Record an event and notify alert hooks for failure states."""
         payload = dict(details or {})
         payload.update(extra)
         item = AuditEvent(event=event, status=status, details=payload)
