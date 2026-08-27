@@ -6,6 +6,13 @@ from typing import Any, Callable
 from .agent_orchestration import AgentResult, AgentTeam
 
 
+# Stable public list for compatibility and discovery.
+default_agent_names = [
+    "strategy", "marketing", "brand", "finance", "sports",
+    "meditation", "future", "systemization", "research",
+]
+
+
 @dataclass(frozen=True)
 class SpecialistProfile:
     name: str
