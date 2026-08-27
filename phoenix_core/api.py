@@ -19,13 +19,14 @@ class PhoenixService:
         self.decisions = DecisionEngine()
 
     def health(self) -> dict[str, Any]:
-        return {"service": "phoenix", "status": self.monitor.health()["status"], "monitor": self.monitor.health()}
+        health = self.monitor.health()
+        return {"service": "phoenix", "status": health["status"], "monitor": health}
 
     def analyze(self, objective: str, capability: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         self.monitor.record("analysis.start", "success", objective=objective, capability=capability)
         try:
             result = self.orchestrator.execute(AgentTask(objective, capability, context or {}))
-            self.monitor.record("analysis.complete", "success", status=result.get("status"))
+            self.monitor.record("analysis.complete", "success", result_status=result.get("status"))
             return result
         except Exception as exc:
             self.monitor.record("analysis.complete", "error", error=type(exc).__name__)
