@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 
 @dataclass(frozen=True)
@@ -13,15 +13,29 @@ class AuditEvent:
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
+# Compatibility name used by the alert bridge.
+MonitorEvent = AuditEvent
+
+
 class Monitor:
-    """In-process operational telemetry and immutable-style audit records."""
+    """In-process operational telemetry with alert hooks and audit records."""
 
     def __init__(self) -> None:
         self._events: list[AuditEvent] = []
+        self._alerts: list[Callable[[AuditEvent], Any]] = []
+
+    def add_alert(self, handler: Callable[[AuditEvent], Any]) -> None:
+        self._alerts.append(handler)
 
     def record(self, event: str, status: str, **details: Any) -> AuditEvent:
         item = AuditEvent(event=event, status=status, details=dict(details))
         self._events.append(item)
+        if status in {"error", "failed", "critical"}:
+            for alert in self._alerts:
+                try:
+                    alert(item)
+                except Exception:
+                    pass
         return item
 
     def recent(self, limit: int = 50) -> list[AuditEvent]:
@@ -31,4 +45,8 @@ class Monitor:
 
     def health(self) -> dict[str, Any]:
         failed = sum(1 for e in self._events if e.status in {"error", "failed"})
-        return {"status": "degraded" if failed else "healthy", "events": len(self._events), "failures": failed}
+        critical = sum(1 for e in self._events if e.status == "critical")
+        return {
+            "status": "critical" if critical else ("degraded" if failed else "healthy"),
+            "events": len(self._events), "failures": failed, "critical": critical,
+        }
