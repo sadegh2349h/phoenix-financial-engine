@@ -13,9 +13,15 @@ from financial_engine.evaluation import shadow_evaluate
 
 def main() -> None:
     provider = PublicMarketData(timeout=15)
-    frame = provider.klines("BTCUSDT", "1d", 365)
+    # Request the maximum supported Binance batch.  The evaluator uses the
+    # last 30/365 observations when enough history is available. Coinbase's
+    # fallback endpoint is limited to 300 candles, so failover must be explicit.
+    frame = provider.klines("BTCUSDT", "1d", 1000)
     if len(frame) < 365:
-        raise SystemExit(f"insufficient BTC history: {len(frame)} rows")
+        raise SystemExit(
+            f"insufficient BTC history: {len(frame)} rows; "
+            "365 daily observations are required for the long-window test"
+        )
     for window in (30, 365):
         result = shadow_evaluate(frame, asset="BTCUSDT", window_days=window)
         print({
