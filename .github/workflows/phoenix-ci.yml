@@ -27,6 +27,8 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
+      - name: Verify package import
+        run: python -c "import phoenix_core; print('PHOENIX import: OK')"
       - name: Run tests
         run: python -m pytest -q
 
@@ -43,4 +45,4 @@ jobs:
       - name: Build container
         run: docker build --pull -t phoenix-financial-engine:${{ github.sha }} .
       - name: Smoke test container
-        run: docker run --rm phoenix-financial-engine:${{ github.sha }} python -c "import phoenix_core; print('PHOENIX import: OK')"
+        run: docker run --rm phoenix-financial-engine:${{ github.sha }} python -c "import phoenix_core; print('PHOENIX container import: OK')"
