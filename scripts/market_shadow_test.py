@@ -14,7 +14,10 @@ from financial_engine.performance import score, markdown_report, json_report
 
 def main() -> None:
     provider = PublicMarketData(timeout=15)
-    requested = 1000
+    # Binance's single request is capped at 1000 candles; the provider's
+    # Coinbase fallback also caps each request, so request exactly the history
+    # needed for the longest evaluation window plus indicator warmup.
+    requested = 420
     frame = provider.klines("BTCUSDT", "1d", requested)
     if len(frame) < 365:
         raise SystemExit(
