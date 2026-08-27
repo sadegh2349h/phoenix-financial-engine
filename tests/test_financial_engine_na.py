@@ -15,10 +15,11 @@ class StubProvider:
         close.iloc[10] = pd.NA
         volume = pd.Series(1000.0, index=idx)
         volume.iloc[15] = pd.NA
+        filled = close.ffill()
         return pd.DataFrame({
-            "open": close.fillna(method="ffill") - 0.5,
-            "high": close.fillna(method="ffill") + 1,
-            "low": close.fillna(method="ffill") - 1,
+            "open": filled - 0.5,
+            "high": filled + 1,
+            "low": filled - 1,
             "close": close,
             "volume": volume,
         })
