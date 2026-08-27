@@ -31,7 +31,7 @@ class TelegramNotifier:
         return bool(self.token and self.chat_id)
 
     def _request(self, method: str, payload: dict[str, Any] | None = None) -> TelegramResult:
-        if not self.configured():
+        if not self.token:
             return TelegramResult(False, None, None, "telegram_not_configured")
         url = f"https://api.telegram.org/bot{self.token}/{method}"
         last_error = None
@@ -49,12 +49,35 @@ class TelegramNotifier:
                 last_error = type(exc).__name__
             if attempt + 1 < self.retries:
                 time.sleep(self.backoff * (2 ** attempt))
-        return TelegramResult(False, status, None, last_error or "telegram_delivery_failed")
+        return TelegramResult(False, status, None, last_error or "telegram_request_failed")
 
     def health_check(self) -> TelegramResult:
         return self._request("getMe")
 
+    def discover_chat_id(self) -> str | None:
+        """Return the most recent private/group chat that contacted the bot."""
+        if not self.token:
+            return None
+        url = f"https://api.telegram.org/bot{self.token}/getUpdates"
+        try:
+            response = requests.post(url, json={"limit": 100}, timeout=self.timeout)
+            data = response.json()
+            if not response.ok or not data.get("ok"):
+                return None
+            for update in reversed(data.get("result") or []):
+                message = update.get("message") or update.get("edited_message") or update.get("channel_post")
+                chat = (message or {}).get("chat") or {}
+                chat_id = chat.get("id")
+                if chat_id is not None:
+                    return str(chat_id)
+        except (requests.RequestException, ValueError):
+            return None
+        return None
+
     def send(self, text: str) -> TelegramResult:
         if not text.strip():
             return TelegramResult(False, None, None, "empty_message")
-        return self._request("sendMessage", {"chat_id": self.chat_id, "text": text})
+        chat_id = self.chat_id or self.discover_chat_id()
+        if not chat_id:
+            return TelegramResult(False, None, None, "telegram_chat_not_found")
+        return self._request("sendMessage", {"chat_id": chat_id, "text": text})
