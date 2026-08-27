@@ -29,11 +29,20 @@ jobs:
         run: python -m pytest -q tests/test_market_evaluation.py
       - name: Live BTC performance evaluation
         run: python scripts/market_shadow_report.py
-      - name: Persist performance report
+      - name: Publish PHOENIX performance report
+        if: always()
+        run: |
+          if [ -f phoenix_performance_report.md ]; then
+            cat phoenix_performance_report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Persist performance reports
         uses: actions/upload-artifact@v4
         with:
           name: phoenix-market-evaluation
-          path: phoenix_market_evaluation.json
+          path: |
+            phoenix_market_evaluation.json
+            phoenix_performance_report.md
+            phoenix_performance_report.json
           if-no-files-found: error
 
   live-telegram:
