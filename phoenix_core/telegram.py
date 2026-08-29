@@ -17,7 +17,7 @@ class TelegramResult:
 
 
 class TelegramNotifier:
-    """Reliable Telegram delivery with bounded retries and no secret logging."""
+    """Reliable Telegram delivery with bounded retries and safe chat discovery."""
 
     def __init__(self, token: str | None = None, chat_id: str | None = None,
                  timeout: float = 10.0, retries: int = 3, backoff: float = 1.0) -> None:
@@ -55,12 +55,16 @@ class TelegramNotifier:
         return self._request("getMe")
 
     def discover_chat_id(self) -> str | None:
-        """Return the most recent private/group chat that contacted the bot."""
+        """Return the most recent chat that contacted the bot."""
         if not self.token:
             return None
         url = f"https://api.telegram.org/bot{self.token}/getUpdates"
         try:
-            response = requests.post(url, json={"limit": 100}, timeout=self.timeout)
+            response = requests.post(
+                url,
+                json={"limit": 100, "allowed_updates": ["message", "edited_message", "channel_post"]},
+                timeout=self.timeout,
+            )
             data = response.json()
             if not response.ok or not data.get("ok"):
                 return None
@@ -77,7 +81,25 @@ class TelegramNotifier:
     def send(self, text: str) -> TelegramResult:
         if not text.strip():
             return TelegramResult(False, None, None, "empty_message")
+        if not self.token:
+            return TelegramResult(False, None, None, "telegram_not_configured")
+
         chat_id = self.chat_id or self.discover_chat_id()
         if not chat_id:
             return TelegramResult(False, None, None, "telegram_chat_not_found")
-        return self._request("sendMessage", {"chat_id": chat_id, "text": text})
+
+        result = self._request("sendMessage", {"chat_id": chat_id, "text": text})
+        if result.ok:
+            return result
+
+        # Recover automatically if the configured chat ID is stale/incorrect
+        # and the bot has already received a message from the intended chat.
+        if result.error == "Bad Request: chat not found":
+            discovered = self.discover_chat_id()
+            if discovered and discovered != chat_id:
+                retry = self._request("sendMessage", {"chat_id": discovered, "text": text})
+                if retry.ok:
+                    self.chat_id = discovered
+                return retry
+
+        return result
