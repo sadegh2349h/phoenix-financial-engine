@@ -1,0 +1,36 @@
+{
+  "student_id": "STU-0001",
+  "personal": {
+    "first_name": "",
+    "last_name": "",
+    "preferred_name": "",
+    "birth_date": null,
+    "phone": null,
+    "email": null,
+    "city": null,
+    "emergency_contact": null
+  },
+  "education": {
+    "start_date": null,
+    "program": "",
+    "level": null,
+    "goals": [],
+    "status": "active"
+  },
+  "financial": {
+    "agreed_fee": null,
+    "currency": "IRR",
+    "received_total": 0,
+    "remaining_balance": null,
+    "payments": []
+  },
+  "books": [],
+  "sessions": [],
+  "assessment": {
+    "strengths": [],
+    "weaknesses": [],
+    "score": null,
+    "last_review_date": null
+  },
+  "notes": []
+}
