@@ -5,10 +5,11 @@ from typing import Any, Callable
 
 from .agent_orchestration import AgentResult, AgentTeam
 from .agents import AgentManifest
+from .trading_specialist import TradingSpecialist
 
 
 _DEFAULT_AGENT_NAMES = [
-    "strategy", "marketing", "brand", "financial_analyst", "sports",
+    "strategy", "marketing", "brand", "financial_analyst", "trading_specialist", "sports",
     "meditation", "future", "systemization", "research",
 ]
 
@@ -29,11 +30,16 @@ def _financial_handler(**kwargs: Any) -> dict[str, Any]:
     }
 
 
+def _trading_handler(task: dict[str, Any]) -> dict[str, Any]:
+    return TradingSpecialist().analyze(task)
+
+
 SPECIALIST_AGENTS = [
     (AgentManifest("strategy", "1.0", ("growth_strategy", "strategy", "planning")), _contract_handler),
     (AgentManifest("marketing", "1.0", ("marketing", "growth", "customer_acquisition", "market_analysis")), _contract_handler),
     (AgentManifest("brand", "1.0", ("branding", "brand_strategy")), _contract_handler),
     (AgentManifest("financial_analyst", "1.0", ("finance", "financial_analysis", "financial_research", "market_analysis"), risk_level="high", human_approval_required=True), _financial_handler),
+    (AgentManifest("trading_specialist", "1.0", ("trading", "technical_analysis", "fundamental_analysis", "market_structure", "risk_management", "backtesting", "opportunity_detection"), risk_level="high", human_approval_required=True), _trading_handler),
     (AgentManifest("sports", "1.0", ("sports", "performance")), _contract_handler),
     (AgentManifest("meditation", "1.0", ("meditation", "mindfulness")), _contract_handler),
     (AgentManifest("future", "1.0", ("future", "foresight")), _contract_handler),
