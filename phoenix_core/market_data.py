@@ -7,11 +7,12 @@ import pandas as pd
 
 
 class PublicMarketData:
-    """Provider-neutral public market data with paginated Coinbase failover."""
+    """Provider-neutral public market data with paginated multi-source failover."""
 
     def __init__(self, timeout: int = 15) -> None:
         self.timeout = timeout
         self.last_provider = None
+        self.provider_history: list[str] = []
 
     @staticmethod
     def _frame(rows: List[List[Any]]) -> pd.DataFrame:
@@ -36,13 +37,41 @@ class PublicMarketData:
         return f"{base}-USD"
 
     def _binance(self, symbol: str, interval: str, limit: int) -> pd.DataFrame:
-        response = requests.get(
-            "https://api.binance.com/api/v3/klines",
-            params={"symbol": symbol.upper(), "interval": interval, "limit": min(max(limit, 1), 1000)},
-            timeout=self.timeout,
+        """Paginate Binance klines instead of assuming one request is sufficient."""
+        requested = min(max(limit, 1), 5000)
+        frames: list[pd.DataFrame] = []
+        end_time: int | None = None
+        remaining = requested
+        while remaining > 0:
+            count = min(remaining, 1000)
+            params = {"symbol": symbol.upper(), "interval": interval, "limit": count}
+            if end_time is not None:
+                params["endTime"] = end_time
+            response = requests.get(
+                "https://api.binance.com/api/v3/klines",
+                params=params,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            raw = response.json()
+            if not raw:
+                break
+            frame = self._frame(raw)
+            frames.append(frame)
+            remaining -= len(frame)
+            if len(frame) < count:
+                break
+            oldest_ms = int(raw[0][0])
+            end_time = oldest_ms - 1
+        if not frames:
+            return self._frame([])
+        return (
+            pd.concat(frames, ignore_index=True)
+            .drop_duplicates("timestamp")
+            .sort_values("timestamp")
+            .tail(requested)
+            .reset_index(drop=True)
         )
-        response.raise_for_status()
-        return self._frame(response.json())
 
     def _coinbase(self, symbol: str, interval: str, limit: int) -> pd.DataFrame:
         mapping = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600, "2h": 7200, "6h": 21600, "1d": 86400}
@@ -77,14 +106,18 @@ class PublicMarketData:
         return pd.concat(frames, ignore_index=True).drop_duplicates("timestamp").sort_values("timestamp").tail(requested).reset_index(drop=True)
 
     def klines(self, symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 300) -> pd.DataFrame:
-        try:
-            df = self._binance(symbol, interval, limit)
-            self.last_provider = "binance"
-            return df
-        except requests.RequestException:
-            df = self._coinbase(symbol, interval, limit)
-            self.last_provider = "coinbase"
-            return df
+        errors: list[str] = []
+        for provider_name, provider in (("binance", self._binance), ("coinbase", self._coinbase)):
+            try:
+                df = provider(symbol, interval, limit)
+                if len(df) >= min(limit, 30):
+                    self.last_provider = provider_name
+                    self.provider_history.append(provider_name)
+                    return df
+                errors.append(f"{provider_name}: only {len(df)} rows")
+            except (requests.RequestException, ValueError) as exc:
+                errors.append(f"{provider_name}: {type(exc).__name__}")
+        raise RuntimeError("No market-data provider returned sufficient history: " + "; ".join(errors))
 
 
 BinancePublicMarketData = PublicMarketData
