@@ -48,6 +48,11 @@ Lead/interest keywords tested for follow-up:
 - مشاوره
 - اولویت
 
+## Advertising naming convention — approved by owner
+- In Daralshafa advertisements, do not use the phrase «شماره تماس مالک».
+- Use «خانم برامالکی» instead when the owner's name is required in the contact/advertising context.
+- For massage advertisements, use «ماسیس خانم برامالکی» as the approved wording.
+
 ## Measurement framework
 Track at minimum:
 - new clients
