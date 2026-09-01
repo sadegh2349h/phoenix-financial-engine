@@ -8,6 +8,7 @@ from .action_engine import recommend_actions
 from .client_reporting import build_client_report
 from .customer_intelligence import business_health, content_score, funnel_stage, lead_score, segment_customer
 from .measurement import record_measurement
+from .specialist_router import route_specialists
 
 
 @dataclass(frozen=True)
@@ -46,8 +47,8 @@ def build_client_baseline(profile: ClientProfile) -> IntelligenceResult:
     readiness, missing = assess_readiness(profile)
     if readiness != "ready":
         return IntelligenceResult(profile.client_id, readiness, missing, (), ("complete_client_intake", "confirm_data_authorization"), {})
-    capabilities = ("social_performance", "content_funnel_intelligence", "lead_scoring", "customer_segmentation", "business_health", "action_recommendation", "measurement_loop", "client_reporting")
-    actions = ("capture_baseline_kpis", "identify_primary_bottleneck", "map_content_to_funnel", "create_first_measurable_action", "schedule_result_review")
+    capabilities = ("social_performance", "content_funnel_intelligence", "lead_scoring", "customer_segmentation", "business_health", "action_recommendation", "measurement_loop", "client_reporting", "specialist_routing")
+    actions = ("capture_baseline_kpis", "identify_primary_bottleneck", "map_content_to_funnel", "route_to_best_specialist", "create_first_measurable_action", "schedule_result_review")
     return IntelligenceResult(profile.client_id, "ready", (), capabilities, actions, dict(profile.baseline))
 
 
@@ -74,8 +75,10 @@ def build_client_intelligence_package(*, profile: ClientProfile, social: Any | N
                                       customer: dict[str, float] | None = None,
                                       objective: str | None = None,
                                       actual: dict[str, float] | None = None,
-                                      targets: dict[str, float] | None = None) -> dict[str, Any]:
-    """Run the full client loop: analysis -> actions -> report -> measurement."""
+                                      targets: dict[str, float] | None = None,
+                                      problem: str | None = None,
+                                      max_specialists: int = 2) -> dict[str, Any]:
+    """Run the full client loop and optionally route to specialist agents."""
     baseline = build_client_baseline(profile)
     if baseline.readiness != "ready":
         return {"status": "needs_setup", "onboarding": baseline}
@@ -85,4 +88,5 @@ def build_client_intelligence_package(*, profile: ClientProfile, social: Any | N
     if actual is not None:
         measurement = record_measurement(baseline={k: float(v) for k, v in profile.baseline.items() if isinstance(v, (int, float))}, actual=actual, targets=targets)
     report = build_client_report(profile=profile, analysis=analysis, actions=actions, measurement=measurement)
-    return {"status": report["status"], "onboarding": baseline, "analysis": analysis, "actions": actions, "report": report, "measurement": measurement, "decision_owner": "human"}
+    specialist_routing = route_specialists(problem=problem, analysis=analysis, max_specialists=max_specialists) if problem else []
+    return {"status": report["status"], "onboarding": baseline, "analysis": analysis, "actions": actions, "report": report, "measurement": measurement, "specialist_routing": specialist_routing, "decision_owner": "human"}
