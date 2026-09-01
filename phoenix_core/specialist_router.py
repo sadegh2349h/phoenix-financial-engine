@@ -27,6 +27,15 @@ SPECIALISTS: tuple[Specialist, ...] = (
     Specialist("closer", "Phoenix Closer", "high-ticket sales and negotiation",
                ("objection", "price_resistance", "closing", "negotiation", "value_alignment", "pricing"),
                ("objection_scripts", "value_reframe", "low_pressure_next_step", "tiered_pricing")),
+    Specialist("growth", "Phoenix Growth", "growth hacking and viral marketing",
+               ("growth", "acquisition", "viral", "referral", "engagement", "algorithm", "community", "challenge"),
+               ("growth_experiments", "acquisition_loop", "referral_loop", "viral_mechanics", "kpi")),
+    Specialist("edu", "Phoenix Edu", "instructional design and e-learning",
+               ("course", "workshop", "masterclass", "learning", "training", "transformation", "curriculum"),
+               ("learning_modules", "quick_win", "exercises", "success_metrics", "accountability")),
+    Specialist("tribe", "Phoenix Tribe", "community architecture and engagement",
+               ("community", "tribe", "identity", "ritual", "engagement", "retention", "ambassador"),
+               ("onboarding_ritual", "weekly_loop", "recognition", "exclusive_benefits", "contributor_loop")),
 )
 
 _PERSIAN_ALIASES: dict[str, tuple[str, ...]] = {
@@ -34,6 +43,9 @@ _PERSIAN_ALIASES: dict[str, tuple[str, ...]] = {
     "ops": ("تکراری", "گلوگاه", "فرآیند", "فرایند", "اتوماسیون", "واگذاری", "دستورالعمل"),
     "brand": ("رقیب", "رقبا", "جایگاه برند", "جایگاه", "تصویر برند", "مزیت رقابتی", "پیام برند"),
     "closer": ("اعتراض", "قیمت", "فروش", "بستن فروش", "مذاکره", "ارزش", "قیمت گذاری"),
+    "growth": ("رشد", "جذب", "وایرال", "انتشار", "ارجاع", "تعامل", "الگوریتم", "چالش", "همکاری"),
+    "edu": ("دوره", "کارگاه", "مسترکلاس", "یادگیری", "آموزش", "تحول", "سرفصل", "تمرین"),
+    "tribe": ("جامعه", "قبیله", "هویت مشترک", "آیین", "تعامل", "ماندگاری", "سفیر", "عضو"),
 }
 
 
