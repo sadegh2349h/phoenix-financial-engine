@@ -27,6 +27,9 @@ SPECIALISTS: tuple[Specialist, ...] = (
     Specialist("connect", "Phoenix Connect", "strategic partnerships and business development", ("partnership", "partner", "collaboration", "alliance", "joint_venture", "referral", "business_development", "audience_access"), ("partner_categories", "outreach_dm", "campaign_idea", "relationship_nurture", "revenue_share")),
     Specialist("story", "Phoenix Story", "narrative strategy and transformation storytelling", ("story", "storytelling", "narrative", "transformation", "hero", "journey", "brand_story", "case_study"), ("story_arc", "transformation_arc", "hero_journey", "storybrand", "new_identity")),
     Specialist("care", "Phoenix Care", "customer success and retention", ("customer_success", "retention", "churn", "onboarding", "first_90_days", "loyalty", "testimonial", "referral"), ("welcome_sequence", "check_in_milestones", "loyalty_system", "churn_prevention", "testimonial_referral_timing")),
+    Specialist("experiment", "Phoenix Experiment", "growth experimentation and optimization", ("experiment", "test", "ab", "hypothesis", "optimization", "kpi", "measurement", "conversion"), ("experiment_plan", "hypothesis", "variants", "primary_kpi", "guardrails", "decision_rule", "learning")),
+    Specialist("opportunity", "Phoenix Opportunity", "opportunity discovery and evidence-based prioritization", ("opportunity", "signal", "pattern", "anomaly", "untapped", "potential", "chance"), ("opportunity_detection", "evidence", "value_hypothesis", "recommended_action", "risk")),
+    Specialist("intelligence", "Phoenix Intelligence", "market, competitor and signal intelligence", ("market", "competitor", "competition", "trend", "signal", "intelligence", "scenario", "research"), ("market_signals", "competitive_patterns", "implications", "scenario_thinking", "confidence")),
 )
 
 _PERSIAN_ALIASES: dict[str, tuple[str, ...]] = {
@@ -42,6 +45,9 @@ _PERSIAN_ALIASES: dict[str, tuple[str, ...]] = {
     "connect": ("همکاری", "شراکت", "مشارکت", "ائتلاف", "سرمایه گذاری مشترک", "کسب و کار", "توسعه کسب و کار", "مخاطب مشترک", "ارجاع"),
     "story": ("داستان", "داستان‌گویی", "روایت", "تحول", "قهرمان", "سفر", "داستان برند", "داستان موفقیت", "مطالعه موردی"),
     "care": ("موفقیت مشتری", "رضایت", "ماندگاری", "ریزش", "شروع همکاری", "۹۰ روز", "وفاداری", "توصیه", "معرفی", "تجربه مشتری"),
+    "experiment": ("آزمایش", "تست", "ای‌بی", "فرضیه", "بهینه سازی", "بهینه‌سازی", "شاخص", "اندازه گیری", "اندازه‌گیری", "تبدیل"),
+    "opportunity": ("فرصت", "سیگنال", "الگو", "ناهنجاری", "فرصت پنهان", "پتانسیل", "شانس"),
+    "intelligence": ("بازار", "رقابت", "رقیب", "روند", "سیگنال", "هوش", "سناریو", "تحقیق"),
 }
 
 
