@@ -36,6 +36,15 @@ SPECIALISTS: tuple[Specialist, ...] = (
     Specialist("tribe", "Phoenix Tribe", "community architecture and engagement",
                ("community", "tribe", "identity", "ritual", "engagement", "retention", "ambassador"),
                ("onboarding_ritual", "weekly_loop", "recognition", "exclusive_benefits", "contributor_loop")),
+    Specialist("price", "Phoenix Price", "value-based pricing and behavioral economics",
+               ("pricing", "price", "value", "roi", "premium", "subscription", "anchoring", "decoy", "investment"),
+               ("tiered_pricing", "value_framing", "pricing_psychology", "roi_metrics", "objection_reframe")),
+    Specialist("viral", "Phoenix Viral", "short-form content and algorithmic retention",
+               ("reels", "viral", "retention", "shares", "saves", "hook", "pattern_interrupt", "controversial", "content"),
+               ("reel_script", "hook", "retention_mechanics", "shareable_identity", "editing_direction")),
+    Specialist("connect", "Phoenix Connect", "strategic partnerships and business development",
+               ("partnership", "partner", "collaboration", "alliance", "joint_venture", "referral", "business_development", "audience_access"),
+               ("partner_categories", "outreach_dm", "campaign_idea", "relationship_nurture", "revenue_share")),
 )
 
 _PERSIAN_ALIASES: dict[str, tuple[str, ...]] = {
@@ -46,6 +55,9 @@ _PERSIAN_ALIASES: dict[str, tuple[str, ...]] = {
     "growth": ("رشد", "جذب", "وایرال", "انتشار", "ارجاع", "تعامل", "الگوریتم", "چالش", "همکاری"),
     "edu": ("دوره", "کارگاه", "مسترکلاس", "یادگیری", "آموزش", "تحول", "سرفصل", "تمرین"),
     "tribe": ("جامعه", "قبیله", "هویت مشترک", "آیین", "تعامل", "ماندگاری", "سفیر", "عضو"),
+    "price": ("قیمت گذاری", "قیمت‌گذاری", "قیمت", "ارزش", "بازگشت سرمایه", "سرمایه گذاری", "سرمایه‌گذاری", "پریمیوم", "اشتراک", "لنگر", "دیکوی"),
+    "viral": ("ریلز", "وایرال", "نگهداشت", "ریتِنشن", "ذخیره", "سیو", "اشتراک گذاری", "اشتراک‌گذاری", "هوک", "قلاب", "پترن اینتراپت", "حقیقت بحث برانگیز", "محتوا"),
+    "connect": ("همکاری", "شراکت", "مشارکت", "ائتلاف", "سرمایه گذاری مشترک", "کسب و کار", "توسعه کسب و کار", "مخاطب مشترک", "ارجاع"),
 }
 
 
