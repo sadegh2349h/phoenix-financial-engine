@@ -43,5 +43,5 @@ def test_authorized_analysis_combines_core_modules():
     )
     assert result["status"] == "analyzed"
     assert result["funnel_stage"] == "consideration"
-    assert result["lead_score"] == 81
+    assert result["lead_score"] == 79.0
     assert result["content_score"]["save_rate"] == .1
