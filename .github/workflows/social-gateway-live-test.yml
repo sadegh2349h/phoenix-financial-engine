@@ -1,0 +1,50 @@
+name: PHOENIX Social Gateway Live Test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-test:
+    name: Public Instagram acquisition test
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      TARGET_URL: https://www.instagram.com/eynak_rosee/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install core dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Install browser dependency
+        run: python -m pip install -r requirements-social-browser.txt && python -m playwright install --with-deps chromium
+      - name: Run live social gateway test
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from phoenix_core.social_acquisition_layer import analyze_social_url
+
+          url = os.environ["TARGET_URL"]
+          result = analyze_social_url(url)
+          acquisition = result["acquisition"]
+          print(json.dumps({
+              "target": url,
+              "status": acquisition["status"],
+              "source": acquisition["source"],
+              "confidence": acquisition["confidence"],
+              "message": acquisition["message"],
+              "profile": acquisition["profile"],
+          }, ensure_ascii=False, indent=2, default=str))
+          if acquisition["status"] != "acquired":
+              raise SystemExit("Social gateway could not acquire public evidence from target")
+          PY
