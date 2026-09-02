@@ -6,7 +6,7 @@ def test_default_specialist_agents_are_registered():
     registry = build_default_registry()
     names = tuple(agent.name for agent in registry.list())
     assert set(names) == set(default_agent_names())
-    assert len(names) == 9
+    assert len(names) == len(default_agent_names())
 
 
 def test_capability_lookup_returns_specialists():
