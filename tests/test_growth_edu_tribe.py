@@ -18,7 +18,8 @@ def test_tribe_has_four_system_layers():
     assert community.recognition_system and community.exclusive_benefits
 
 
-def test_router_includes_new_specialists():
+def test_router_selects_top_two_relevant_specialists():
     result = route_specialists(problem="رشد و جذب مخاطب و طراحی دوره و جامعه")
     keys = {item["key"] for item in result}
-    assert {"growth", "edu", "tribe"}.issubset(keys)
+    assert {"growth", "edu"}.issubset(keys)
+    assert len(result) <= 2
