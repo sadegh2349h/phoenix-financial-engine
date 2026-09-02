@@ -1,8 +1,8 @@
 """PHOENIX Social Acquisition Layer.
 
-Provider-agnostic acquisition contracts for social-profile analysis.
-No scraping, credential bypass, or fabricated metrics. Adapters may be added
-for official/authorized providers, public evidence, or user-supplied captures.
+Acquires only publicly exposed profile evidence. No login, credential bypass,
+or private Insights access is attempted. Rich metrics still require an
+authorized provider or user-supplied evidence.
 """
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from dataclasses import dataclass, asdict
 from typing import Any, Callable
 from urllib.parse import urlparse
 
+from .public_social_provider import fetch_public_social_profile
 from .social_intelligence import SocialProfileInput, build_social_intelligence_package
 
 
@@ -35,7 +36,7 @@ def acquisition_routes() -> tuple[dict[str, Any], ...]:
     return (
         {"route": "official_api", "priority": 1, "authorization": "required", "enabled": False},
         {"route": "authorized_provider", "priority": 2, "authorization": "required", "enabled": False},
-        {"route": "public_evidence", "priority": 3, "authorization": "public_only", "enabled": False},
+        {"route": "public_evidence", "priority": 3, "authorization": "public_only", "enabled": True},
         {"route": "user_supplied", "priority": 4, "authorization": "user_supplied", "enabled": True},
         {"route": "visual_capture", "priority": 5, "authorization": "user_supplied", "enabled": True},
     )
@@ -53,9 +54,15 @@ def acquire_social_profile(
         return AcquisitionResult("acquired", "authorized_adapter", profile, confidence=1.0)
     if user_supplied is not None:
         return AcquisitionResult("acquired", "user_supplied", user_supplied, confidence=1.0)
+    try:
+        profile = fetch_public_social_profile(normalized)
+    except Exception as exc:
+        return AcquisitionResult("fallback_required", "public_evidence", None, str(exc), 0.0)
+    if profile is not None:
+        return AcquisitionResult("acquired", "public_evidence", profile, confidence=0.75)
     return AcquisitionResult(
-        "fallback_required", "none", None,
-        "No authorized provider adapter or user-supplied evidence is connected.", 0.0,
+        "fallback_required", "public_evidence", None,
+        "Public profile evidence was not available from the target response.", 0.0,
     )
 
 
