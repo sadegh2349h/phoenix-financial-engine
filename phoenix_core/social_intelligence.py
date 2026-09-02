@@ -104,6 +104,7 @@ def build_social_business_diagnosis(analysis: dict[str, Any]) -> dict[str, Any]:
     if profile.get("engagement_rate") is not None and profile["engagement_rate"] < 0.01:
         hypotheses.append({"bottleneck": "engagement", "reason": "reported engagement rate below 1%", "confidence": 0.85})
 
+    fallback_required = analysis.get("fallback_required", False)
     return {
         "primary_bottleneck": hypotheses[0]["bottleneck"] if hypotheses else "insufficient evidence for a primary bottleneck",
         "hypotheses": hypotheses,
@@ -111,7 +112,7 @@ def build_social_business_diagnosis(analysis: dict[str, Any]) -> dict[str, Any]:
         "confidence": analysis["confidence"]["overall"],
         "next_data_priority": (
             "authorized Insights + 10-20 recent posts/reels + 3 competitors"
-            if analysis["fallback_required"]
+            if fallback_required
             else "expand sample and validate hypotheses against business outcomes"
         ),
         "decision_owner": "human",
