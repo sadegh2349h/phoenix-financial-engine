@@ -4,63 +4,68 @@
 
 This registry records high-value open-source projects and implementation patterns that can materially improve PHOENIX. External code is **not copied blindly into the core**. Each candidate is evaluated for architectural fit, license, maintenance status, security, dependency cost, and testability before adoption.
 
-## Current PHOENIX baseline
+## 2026 high-signal GitHub research
 
-The repository already contains core capabilities for agent orchestration, smart routing, memory, data access, evaluation loops, monitoring, risk control, multi-agent coordination, market intelligence, scheduled execution, Telegram alerting, and CI/runtime workflows.
+The following five projects were selected as the strongest combination of community adoption, technical relevance and architectural value for PHOENIX. GitHub stars are treated as a popularity signal, not as proof of correctness or quality.
 
-## Priority adoption matrix
+| Rank | Project | Primary strength | PHOENIX decision |
+|---|---|---|---|
+| 1 | `obra/superpowers` | skill-driven, evidence-first development workflow, TDD, planning, review and verification | **Adopt patterns** for PHOENIX engineering skills and quality gates; do not vendor the project |
+| 2 | `langchain-ai/langchain` | interoperable LLM/agent components, integrations, model portability and rapid composition | **Selective architecture adoption** for tool/data/model composition; keep PHOENIX orchestration as the governing layer |
+| 3 | `TauricResearch/TradingAgents` | specialized financial agents, analyst/researcher debate, risk/portfolio roles, persistence and checkpointing | **Selective adoption** for Financial Engine research/debate patterns; never bypass PHOENIX human approval |
+| 4 | `vllm-project/vllm` | high-throughput, memory-efficient LLM inference and OpenAI-compatible serving | **Infrastructure option** for future self-hosted/local model serving and cost/latency optimization |
+| 5 | `FoundationAgents/MetaGPT` | role-based multi-agent collaboration, SOP-driven teams and structured deliverables | **Architecture pattern** for specialist collaboration; do not replace PHOENIX router/orchestrator |
 
-| Priority | Project | Capability to absorb | PHOENIX target | Adoption mode |
-|---|---|---|---|---|
-| P0 | Microsoft Agent Framework | Durable multi-agent workflows, sequential/concurrent/handoff/group patterns, checkpointing, human-in-loop, OpenTelemetry | `phoenix_core/orchestrator.py`, `execution_loop.py`, `monitoring.py` | Architecture pattern + optional adapter |
-| P0 | PydanticAI | Typed agents, structured outputs, dependency injection, agent specs, evals | agent contracts, specialist agents, decision outputs | Optional adapter + native validation |
-| P0 | LiteLLM | Provider abstraction, routing, retry/fallback, load balancing, spend tracking | `llm_provider.py`, `smart_routing.py`, cost governance | Optional provider gateway |
-| P0 | LangGraph | Stateful/durable workflows, persistence, human-in-loop, state transitions | long-running execution and recovery | Pattern/optional adapter; do not duplicate current orchestration blindly |
-| P1 | Mem0 | Layered memory, semantic retrieval, deduplication/conflict resolution, scoped memories | `memory.py`, data-memory layer | Optional memory provider |
-| P1 | Langfuse | LLM tracing, latency/token/cost tracking, prompt/eval observability | `observability.py`, `monitoring.py`, evaluation loop | Optional telemetry backend |
-| P1 | OpenLLMetry/OpenTelemetry | Standardized LLM traces and provider/vector DB instrumentation | runtime observability | Native OTel instrumentation |
-| P1 | Evidently | Evaluation suites, data/LLM quality metrics, drift detection, live monitoring | self-evaluation, performance diagnostics, market/data quality | Optional evaluation/monitoring module |
+## PHOENIX capability mapping
 
-## Why these are valuable
+### Superpowers → PHOENIX Skill Governance
+Absorb: mandatory planning, test-first implementation, systematic debugging, code review and verification-before-completion. This strengthens execution quality and prevents PHOENIX from declaring success without evidence.
 
-### 1. Microsoft Agent Framework — P0
-Adds production workflow patterns that map directly to PHOENIX's goal-oriented execution model: sequential, concurrent, handoff and group collaboration, plus checkpointing, streaming and human approval. It is actively maintained and MIT licensed.
+Target: specialist skill contracts, engineering workflow, quality gates and future client-delivery playbooks.
 
-### 2. PydanticAI — P0
-Strengthens the contract boundary between agents and the core. Typed inputs/outputs and declarative agent specifications reduce runtime ambiguity and make specialist-agent behavior easier to validate.
+### LangChain → PHOENIX Integration Fabric
+Absorb: modular components, provider interoperability and tool/data integration patterns. Use only where they improve the existing provider-agnostic boundary.
 
-### 3. LiteLLM — P0
-Creates a model-provider abstraction with retry/fallback, routing and cost tracking. This is strategically important because PHOENIX should not become dependent on one model/provider.
+Target: Data, Tools, model gateway, retrieval and future external-service adapters.
 
-### 4. LangGraph — P0
-Useful as a reference for durable state machines and resumable long-running agent workflows. PHOENIX already has orchestration and runtime code, so the correct approach is selective adoption rather than replacing the existing core.
+### TradingAgents → PHOENIX Financial Council
+Absorb: specialist analyst roles, bullish/bearish research debate, risk management, portfolio-level synthesis, decision logging and checkpoint/recovery patterns.
 
-### 5. Mem0 — P1
-Provides a mature memory lifecycle model: conversation/session/user or agent memory, semantic retrieval, deduplication and conflict handling. PHOENIX's current JSON/token memory is functional but comparatively simple.
+Target: Financial Engine research and shadow evaluation. External code must never autonomously trade or override human approval.
 
-### 6. Langfuse — P1
-Provides the missing operational visibility around model calls: traces, latency, token usage, cost, retrieval/tool steps, prompts and evaluations.
+### vLLM → PHOENIX Inference Infrastructure
+Absorb: efficient model serving, continuous batching, caching, quantization and OpenAI-compatible serving where operationally justified.
 
-### 7. OpenLLMetry/OpenTelemetry — P1
-Gives PHOENIX vendor-neutral telemetry so observability can survive changes in LLM providers and backends.
+Target: optional self-hosted inference tier for high-volume or privacy-sensitive workloads. Adoption is conditional on hardware, model quality, security and total-cost testing.
 
-### 8. Evidently — P1
-Adds systematic quality monitoring: data drift, evaluation metrics, regression detection and production monitoring. This aligns strongly with PHOENIX's requirement to learn from measurable outcomes rather than intuition.
+### MetaGPT → PHOENIX Specialist Organization
+Absorb: role-based decomposition, SOP-driven collaboration and structured handoffs between specialists.
 
-## Safety / maintenance decisions
+Target: Orchestrator + Specialist Router + multi-stage client problem solving. PHOENIX remains the governance layer and human decision owner.
 
-- Microsoft AutoGen is **not** selected as a new dependency because its upstream repository is now in maintenance mode and directs new projects toward Microsoft Agent Framework.
-- No external repository is vendored wholesale into PHOENIX.
-- Optional integrations must fail closed and leave the native PHOENIX path operational when the external package is absent.
-- Every adopted integration requires tests and a rollback path.
-- Financial decision logic remains under PHOENIX governance and human-approval rules; external agent frameworks must not override those controls.
+## Combined PHOENIX target architecture
 
-## Implementation sequence
+Observe → Normalize → Remember → Route → Specialist Collaboration → Evidence/De\-bate → Decision Gate → Human Approval → Execute → Monitor → Learn → Audit
 
-1. Typed contracts and quality gates.
-2. Model gateway with fallback/cost governance.
-3. Durable workflow/checkpoint layer.
-4. Tiered semantic memory provider.
-5. Unified OpenTelemetry tracing.
-6. Evaluation/drift monitoring.
-7. Dashboard and operational reporting.
+Supporting capabilities:
+- Superpowers patterns for disciplined work and verification.
+- LangChain-style composition for tools, models and integrations.
+- MetaGPT-style role/SOP collaboration for specialist teams.
+- TradingAgents-style domain councils for financial research.
+- vLLM as an optional execution/inference tier.
+
+## Adoption rules
+
+1. **Patterns before dependencies:** prefer extracting proven design patterns before adding a hard dependency.
+2. **No wholesale copying:** external repositories are references/adapters, not replacements for the PHOENIX core.
+3. **Human governance remains mandatory:** external agents cannot make irreversible client or financial decisions autonomously.
+4. **Evidence before activation:** every dependency must pass compatibility, security, licensing, performance and regression tests.
+5. **Rollback required:** every production integration must have a native PHOENIX fallback path.
+
+## Current baseline retained
+
+Existing PHOENIX adapters remain valid: Microsoft Agent Framework, Mem0, GrowthBook, Langfuse and PydanticAI, plus the broader optional capability registry. This research **adds an evidence-ranked architecture layer**; it does not invalidate existing adapters.
+
+## Research provenance
+
+Primary project sources reviewed: official GitHub repositories/READMEs for Superpowers, LangChain, TradingAgents, vLLM and MetaGPT. Star counts are time-sensitive and should be refreshed before procurement or production dependency decisions.
