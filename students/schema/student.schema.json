@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PHOENIX Student Record",
+  "type": "object",
+  "required": ["student_id", "personal", "education", "financial", "books"],
+  "properties": {
+    "student_id": {"type": "string", "description": "شناسه یکتای شاگرد"},
+    "personal": {
+      "type": "object",
+      "properties": {
+        "first_name": {"type": "string"},
+        "last_name": {"type": "string"},
+        "preferred_name": {"type": "string"},
+        "birth_date": {"type": ["string", "null"], "format": "date"},
+        "phone": {"type": ["string", "null"]},
+        "email": {"type": ["string", "null"], "format": "email"},
+        "city": {"type": ["string", "null"]},
+        "emergency_contact": {"type": ["string", "null"]}
+      }
+    },
+    "education": {
+      "type": "object",
+      "properties": {
+        "start_date": {"type": ["string", "null"], "format": "date"},
+        "program": {"type": ["string", "null"]},
+        "level": {"type": ["string", "null"]},
+        "goals": {"type": "array", "items": {"type": "string"}},
+        "status": {"type": "string", "enum": ["active", "paused", "completed", "inactive"]}
+      }
+    },
+    "financial": {
+      "type": "object",
+      "properties": {
+        "agreed_fee": {"type": ["number", "null"]},
+        "currency": {"type": ["string", "null"]},
+        "received_total": {"type": ["number", "null"]},
+        "remaining_balance": {"type": ["number", "null"]},
+        "payments": {"type": "array", "items": {"type": "object", "properties": {"date": {"type": "string", "format": "date"}, "amount": {"type": "number"}, "method": {"type": ["string", "null"]}, "note": {"type": ["string", "null"]}}}}
+      }
+    },
+    "books": {
+      "type": "array",
+      "items": {"type": "object", "required": ["title"], "properties": {"title": {"type": "string"}, "author": {"type": ["string", "null"]}, "recommended_date": {"type": ["string", "null"], "format": "date"}, "status": {"type": "string", "enum": ["recommended", "started", "completed", "skipped"]}, "notes": {"type": ["string", "null"]}}}
+    },
+    "sessions": {"type": "array", "items": {"type": "object", "properties": {"date": {"type": "string", "format": "date"}, "topic": {"type": ["string", "null"]}, "attendance": {"type": "string", "enum": ["present", "absent", "excused"]}, "progress": {"type": ["string", "null"]}, "next_action": {"type": ["string", "null"]}}}},
+    "assessment": {"type": "object", "properties": {"strengths": {"type": "array", "items": {"type": "string"}}, "weaknesses": {"type": "array", "items": {"type": "string"}}, "score": {"type": ["number", "null"]}, "last_review_date": {"type": ["string", "null"], "format": "date"}}},
+    "notes": {"type": "array", "items": {"type": "object", "properties": {"date": {"type": "string", "format": "date"}, "text": {"type": "string"}}}}
+  }
+}
