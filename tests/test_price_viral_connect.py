@@ -29,8 +29,9 @@ def test_connect_builds_partnership_system():
     assert outreach_dm("wellness providers", "premium coaches")
 
 
-def test_router_routes_new_specialists_from_persian_problem():
+def test_router_routes_relevant_specialist_from_persian_problem():
     result = route_specialists(problem="قیمت گذاری، ریلز وایرال و همکاری با برندهای مکمل")
     keys = {item["key"] for item in result}
     assert keys & {"price", "viral", "connect"}
+    assert len(result) <= 2
     assert all(item["human_approval_required"] for item in result)
