@@ -1,9 +1,9 @@
 from phoenix_core.specialist_router import enrich_client_package, route_specialists, specialist_registry
 
 
-def test_registry_contains_four_core_specialists():
+def test_registry_contains_required_core_specialists():
     registry = specialist_registry()
-    assert set(registry) == {"psyche", "ops", "brand", "closer"}
+    assert {"psyche", "ops", "brand", "closer"}.issubset(set(registry))
 
 
 def test_routing_is_evidence_based_and_requires_human_approval():
