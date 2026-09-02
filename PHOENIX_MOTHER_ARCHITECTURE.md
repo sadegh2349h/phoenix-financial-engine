@@ -49,6 +49,18 @@ Core contract:
 
 Phoenix Growth is routed by `specialist_router.py` and, when selected, is injected into `phoenix_orchestrator.build_execution_plan()` as a measurable growth plan.
 
+## Evidence-ranked open-source intelligence
+PHOENIX maintains an evidence-ranked registry of high-signal open-source projects at `phoenix_core/oss_intelligence.py` and `docs/PHOENIX_EXTERNAL_CODE_REGISTRY.md`.
+
+The current five selected architecture references are:
+1. **obra/superpowers** — disciplined skills, planning, TDD, review and verification → PHOENIX skill governance and quality gates.
+2. **langchain-ai/langchain** — composable models, tools, data and provider integrations → PHOENIX integration fabric.
+3. **TauricResearch/TradingAgents** — specialist financial analysis, debate, risk and decision logging → Financial Engine research council and shadow evaluation.
+4. **vllm-project/vllm** — high-throughput, memory-efficient inference → optional self-hosted inference tier.
+5. **FoundationAgents/MetaGPT** — role-based multi-agent collaboration and SOP-driven workflows → specialist collaboration and governed handoffs.
+
+These are **reference architectures, not wholesale dependencies**. PHOENIX adopts patterns selectively after security, license, compatibility, performance and regression review. Human approval remains mandatory for consequential actions.
+
 ## External capability layer
 Five optional provider adapters are registered without hard-coupling the core:
 - **Microsoft Agent Framework** — multi-agent orchestration, workflows, checkpoints and approval boundaries.
