@@ -21,6 +21,19 @@ Observe → Normalize → Remember → Analyze → Deliberate → Decide → App
 ## Specialist layer
 PHOENIX currently maintains 15 specialist domains: Psyche, Ops, Brand, Closer, Growth, Edu, Tribe, Price, Viral, Connect, Story, Care, Experiment, Opportunity and Intelligence. Routing is evidence-based and recommendations remain human-approved.
 
+## Phoenix Growth
+**Phoenix Growth** is the acquisition and growth specialist. Its current implementation is `phoenix_core/growth_specialist.py` and its role is to turn a business goal into measurable, low-cost growth experiments.
+
+Core contract:
+- Funnel stages: **Awareness (آگاهی) → Consideration (بررسی) → Conversion (تبدیل)**.
+- Three experiment types: shareable acquisition asset, participatory referral loop, and diagnostic-to-conversation activation.
+- Primary measurement priority: retention, saves, shares, qualified leads and conversion.
+- Frameworks: AARRR, Hook Model, Growth Loops and hypothesis-driven experimentation.
+- Every experiment declares hypothesis, execution plan, KPI, risk and human approval requirement.
+- No Telegram dependency; the module is channel-agnostic and can use Instagram, website, CRM or community data.
+
+Phoenix Growth is routed by `specialist_router.py` and, when selected, is injected into `phoenix_orchestrator.build_execution_plan()` as a measurable growth plan.
+
 ## External capability layer
 Five optional provider adapters are registered without hard-coupling the core:
 - **Microsoft Agent Framework** — multi-agent orchestration, workflows, checkpoints and approval boundaries.
@@ -32,7 +45,7 @@ Five optional provider adapters are registered without hard-coupling the core:
 The adapter boundary allows PHOENIX to operate without these optional dependencies while making each provider replaceable and testable. Providers must pass security, license, dependency and compatibility review before production activation.
 
 ## Coordination contract
-`phoenix_core.phoenix_orchestrator.build_execution_plan()` connects specialist routing with the capability registry and emits a governed lifecycle: observe → remember → route → analyze → deliberate → human approval → execute → monitor → learn → audit.
+`phoenix_core.phoenix_orchestrator.build_execution_plan()` connects specialist routing with the capability registry and emits a governed lifecycle: observe → remember → route → analyze → deliberate → human approval → execute → monitor → learn → audit. When Growth is routed, the plan also contains `growth_plan` with funnel stages, experiments and measurement priorities.
 
 ## Modularity
 Each engine is a plugin-like module with a manifest, capabilities and version. The core must not contain business-specific assumptions. Modules can be enabled, disabled, upgraded or replaced independently.
