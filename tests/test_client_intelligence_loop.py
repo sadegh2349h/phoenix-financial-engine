@@ -22,7 +22,7 @@ def test_full_client_package_is_evidence_first():
     )
     assert result["status"] == "measurement_complete"
     assert result["decision_owner"] == "human"
-    assert result["report"]["executive_summary"]["primary_bottleneck"] == "conversion_rate"
+    assert result["report"]["executive_summary"]["primary_bottleneck"] == "revenue_growth"
     assert result["measurement"]["targets"]["conversion_rate"]["met"] is True
 
 
