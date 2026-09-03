@@ -24,6 +24,9 @@ CAPABILITIES = (
     Capability("experimentation", "GrowthBook", "experiments, feature flags and statistical evaluation", "phoenix_core.integrations.growthbook"),
     Capability("observability", "Langfuse", "traces, evaluations, latency and cost visibility", "phoenix_core.integrations.langfuse"),
     Capability("typed_agents", "PydanticAI", "typed agent contracts and structured outputs", "phoenix_core.integrations.pydantic_ai"),
+    Capability("oss_intelligence", "PHOENIX local layer", "evidence-ranked discovery and adoption scoring for open-source capabilities", "phoenix_core.oss_intelligence", optional_dependency=False),
+    Capability("social_benchmark", "PHOENIX local layer", "evidence, funnel-stage and safety evaluation for social intelligence", "phoenix_core.social_benchmark", optional_dependency=False),
+    Capability("agent_quality", "PHOENIX local layer", "goal, evidence, safety and observability production gates", "phoenix_core.agent_quality_gate", optional_dependency=False),
 )
 
 
