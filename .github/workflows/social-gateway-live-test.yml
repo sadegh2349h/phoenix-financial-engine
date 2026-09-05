@@ -28,19 +28,14 @@ jobs:
       - name: Resolve profile
         env:
           DISPATCH_PROFILE: ${{ inputs.profile_url }}
+        shell: bash
         run: |
           if [ -n "$DISPATCH_PROFILE" ]; then
             echo "INSTAGRAM_PROFILE_URL=$DISPATCH_PROFILE" >> "$GITHUB_ENV"
           else
-            python - <<'PY'
-          import json
-          from pathlib import Path
-          data=json.loads(Path("config/instagram_request.json").read_text(encoding="utf-8"))
-          url=str(data.get("profile_url","")).strip()
-          if not url: raise SystemExit("missing profile_url")
-          with open("$GITHUB_ENV","a",encoding="utf-8") as f:
-              f.write("INSTAGRAM_PROFILE_URL="+url+"\n")
-          PY
+            PROFILE_URL="$(python -c 'import json; print(json.load(open("config/instagram_request.json", encoding="utf-8"))["profile_url"].strip())')"
+            test -n "$PROFILE_URL"
+            echo "INSTAGRAM_PROFILE_URL=$PROFILE_URL" >> "$GITHUB_ENV"
           fi
       - name: Acquire public Instagram evidence with Apify
         env:
@@ -52,7 +47,7 @@ jobs:
           import glob,json
           files=glob.glob("artifacts/instagram_*.json")
           if not files: raise SystemExit("no acquisition artifact")
-          data=json.load(open(files[0],encoding="utf-8"))
+          with open(files[0],encoding="utf-8") as f: data=json.load(f)
           if not data.get("items"): raise SystemExit("empty acquisition")
           print(json.dumps({"status":"verified","username":data.get("username"),"item_count":data.get("item_count")},ensure_ascii=False))
           PY
