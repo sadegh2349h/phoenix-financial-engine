@@ -3,7 +3,16 @@ name: PHOENIX Social Gateway Live Test
 on:
   push:
     branches: [main]
+    paths:
+      - "config/instagram_request.json"
+      - ".github/workflows/social-gateway-live-test.yml"
+      - "scripts/instagram_apify_test.py"
   workflow_dispatch:
+    inputs:
+      profile_url:
+        description: "Instagram public profile URL or username"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,38 +22,44 @@ jobs:
     name: Public Instagram acquisition test
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    env:
-      PYTHONPATH: ${{ github.workspace }}
-      TARGET_URL: https://www.instagram.com/eynak_rosee/
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install core dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Install browser dependency
-        run: python -m pip install -r requirements-social-browser.txt && python -m playwright install --with-deps chromium
-      - name: Run live social gateway test
+      - name: Resolve profile
+        env:
+          DISPATCH_PROFILE: ${{ inputs.profile_url }}
+        run: |
+          if [ -n "$DISPATCH_PROFILE" ]; then
+            echo "INSTAGRAM_PROFILE_URL=$DISPATCH_PROFILE" >> "$GITHUB_ENV"
+          else
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("config/instagram_request.json").read_text(encoding="utf-8"))
+          url=str(data.get("profile_url","")).strip()
+          if not url: raise SystemExit("missing profile_url")
+          with open("$GITHUB_ENV","a",encoding="utf-8") as f:
+              f.write("INSTAGRAM_PROFILE_URL="+url+"\n")
+          PY
+          fi
+      - name: Acquire public Instagram evidence with Apify
+        env:
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+        run: python scripts/instagram_apify_test.py
+      - name: Verify acquisition
         run: |
           python - <<'PY'
-          import json
-          import os
-          from phoenix_core.social_acquisition_layer import analyze_social_url
-
-          url = os.environ["TARGET_URL"]
-          result = analyze_social_url(url)
-          acquisition = result["acquisition"]
-          print(json.dumps({
-              "target": url,
-              "status": acquisition["status"],
-              "source": acquisition["source"],
-              "confidence": acquisition["confidence"],
-              "message": acquisition["message"],
-              "profile": acquisition["profile"],
-          }, ensure_ascii=False, indent=2, default=str))
-          if acquisition["status"] != "acquired":
-              raise SystemExit("Social gateway could not acquire public evidence from target")
+          import glob,json
+          files=glob.glob("artifacts/instagram_*.json")
+          if not files: raise SystemExit("no acquisition artifact")
+          data=json.load(open(files[0],encoding="utf-8"))
+          if not data.get("items"): raise SystemExit("empty acquisition")
+          print(json.dumps({"status":"verified","username":data.get("username"),"item_count":data.get("item_count")},ensure_ascii=False))
           PY
+      - name: Upload acquisition evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phoenix-instagram-evidence-${{ github.run_id }}
+          path: artifacts/instagram_*.json
+          if-no-files-found: error
