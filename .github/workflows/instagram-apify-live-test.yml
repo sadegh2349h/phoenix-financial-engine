@@ -1,0 +1,28 @@
+name: PHOENIX Instagram Apify Live Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/instagram_apify_test.py"
+      - ".github/workflows/instagram-apify-live-test.yml"
+
+jobs:
+  instagram-apify-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run live acquisition test
+        env:
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+        run: python scripts/instagram_apify_test.py
+
+      - name: Upload acquisition evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instagram-teb-daralshefa
+          path: artifacts/instagram_teb_daralshefa.json
+          if-no-files-found: ignore
