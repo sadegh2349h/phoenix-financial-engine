@@ -2,10 +2,18 @@ name: PHOENIX Instagram Apify Live Test
 
 on:
   workflow_dispatch:
+    inputs:
+      profile_url:
+        description: "Instagram public profile URL"
+        required: true
+        default: "https://www.instagram.com/mahmoud_julaei/"
   push:
     paths:
       - "scripts/instagram_apify_test.py"
       - ".github/workflows/instagram-apify-live-test.yml"
+
+env:
+  INSTAGRAM_PROFILE_URL: ${{ github.event.inputs.profile_url || 'https://www.instagram.com/mahmoud_julaei/' }}
 
 jobs:
   instagram-apify-test:
@@ -23,6 +31,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: instagram-teb-daralshefa
-          path: artifacts/instagram_teb_daralshefa.json
+          name: instagram-apify-evidence
+          path: artifacts/instagram_*.json
           if-no-files-found: ignore
