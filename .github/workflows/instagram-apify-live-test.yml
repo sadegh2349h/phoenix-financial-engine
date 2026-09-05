@@ -4,16 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       profile_url:
-        description: "Instagram public profile URL"
+        description: "Instagram public profile URL or username"
         required: true
-        default: "https://www.instagram.com/mahmoud_julaei/"
+        type: string
+  repository_dispatch:
+    types: [instagram-profile-analysis]
   push:
     paths:
       - "scripts/instagram_apify_test.py"
       - ".github/workflows/instagram-apify-live-test.yml"
 
 env:
-  INSTAGRAM_PROFILE_URL: ${{ github.event.inputs.profile_url || 'https://www.instagram.com/mahmoud_julaei/' }}
+  INSTAGRAM_PROFILE_URL: ${{ github.event.inputs.profile_url || github.event.client_payload.profile_url || '' }}
 
 jobs:
   instagram-apify-test:
@@ -21,6 +23,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate requested profile
+        run: |
+          test -n "$INSTAGRAM_PROFILE_URL" || { echo "No Instagram profile URL supplied"; exit 2; }
+          echo "Requested Instagram profile: $INSTAGRAM_PROFILE_URL"
 
       - name: Run live acquisition test
         env:
