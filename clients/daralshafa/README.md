@@ -10,6 +10,8 @@
 - Primary visual palette: dark green, gold, cream/white
 - Brand personality: calm, premium, natural, specialized, human and trustworthy
 - Approved tagline direction: «آرامش و سلامت، به سبک تو»
+- **Approved descriptor:** «مرکز تخصصی سلامت و درمان»
+- The previous descriptor «مرکز تخصصی سلامت و زیبایی» is no longer the approved wording and must not be used in new brand materials.
 
 ## Business positioning
 دارالشفا is positioned as a health, wellness and complementary/traditional-care brand with a broad service portfolio. The intended customer experience is not limited to a transaction: the brand aims to turn satisfied clients into long-term relationships and friends through continued communication and follow-up.
