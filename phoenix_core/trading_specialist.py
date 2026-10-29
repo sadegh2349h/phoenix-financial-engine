@@ -155,13 +155,13 @@ class TradingSpecialist:
         declared_timeframes = market.get("timeframes")
         if not isinstance(declared_timeframes, Sequence) or isinstance(declared_timeframes, (str, bytes)):
             blockers.append("timeframes must be a sequence")
-        elif not set(self.profile.required_timeframes).issubset(set(declared_timeframes)):
+        elif not all(isinstance(item, str) for item in declared_timeframes) or not set(self.profile.required_timeframes).issubset(set(declared_timeframes)):
             blockers.append(
                 "timeframes must include " + ", ".join(self.profile.required_timeframes)
             )
 
         candidate = market.get("candidate_signal")
-        if candidate not in {"BUY", "SELL", "HOLD"}:
+        if not isinstance(candidate, str) or candidate not in {"BUY", "SELL", "HOLD"}:
             blockers.append("candidate_signal must be BUY, SELL, or HOLD from a separately validated strategy")
 
         if blockers:
