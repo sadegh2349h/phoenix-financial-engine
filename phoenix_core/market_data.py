@@ -110,11 +110,13 @@ class PublicMarketData:
         for provider_name, provider in (("binance", self._binance), ("coinbase", self._coinbase)):
             try:
                 df = provider(symbol, interval, limit)
-                if len(df) >= min(limit, 30):
+                provider_cap = 5000 if provider_name == "binance" else 1000
+                expected_rows = min(max(limit, 1), provider_cap)
+                if len(df) >= expected_rows:
                     self.last_provider = provider_name
                     self.provider_history.append(provider_name)
                     return df
-                errors.append(f"{provider_name}: only {len(df)} rows")
+                errors.append(f"{provider_name}: only {len(df)} rows; expected {expected_rows}")
             except (requests.RequestException, ValueError) as exc:
                 errors.append(f"{provider_name}: {type(exc).__name__}")
         raise RuntimeError("No market-data provider returned sufficient history: " + "; ".join(errors))
