@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 import requests
 
 from phoenix_core.data_quality import assess_ohlcv
@@ -38,3 +39,14 @@ def test_failover_to_coinbase(monkeypatch):
     assert provider.last_provider == "coinbase"
     assert len(df) == 60
     assert list(df.columns) == ["timestamp", "open", "high", "low", "close", "volume"]
+
+
+def test_rejects_partial_history_instead_of_calling_it_sufficient(monkeypatch):
+    provider = PublicMarketData()
+    partial = lambda *args, **kwargs: provider._frame([
+        [i * 3600000, 100+i, 102+i, 99+i, 101+i, 10+i] for i in range(60)
+    ])
+    monkeypatch.setattr(provider, "_binance", partial)
+    monkeypatch.setattr(provider, "_coinbase", partial)
+    with pytest.raises(RuntimeError, match="only 60 rows"):
+        provider.klines("BTCUSDT", "1h", 300)
